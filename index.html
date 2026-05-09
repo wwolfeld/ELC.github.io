@@ -174,7 +174,12 @@
     function isoDate(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
     function friendlyDate(dateStr){ return new Date(dateStr+'T12:00:00').toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'}); }
     function weekdayIndex(dateStr){ return new Date(dateStr+'T12:00:00').getDay(); }
-    function shiftDate(dateStr, delta){ const d=new Date(dateStr+'T12:00:00'); d.setDate(d.getDate()+delta); return isoDate(d); }
+    function shiftDate(dateStr, delta){
+      const [y,m,d] = dateStr.split('-').map(Number);
+      const base = Date.UTC(y, m-1, d);
+      const next = new Date(base + delta * 86400000);
+      return isoDate(next);
+    }
     function ensureEntry(dateStr){
       if(!state.entries[dateStr]) state.entries[dateStr] = { date: dateStr, meals: Array.from({length:4},()=>({targetBlocks:'', time:'', food:''})), exercise: Array.from({length:3},()=>({activity:'', duration:''})), waterTarget:'88', waterActual:'0', successes:'', improveTomorrow:'' };
       return state.entries[dateStr];
