@@ -175,17 +175,14 @@
     function friendlyDate(dateStr){ return new Date(dateStr+'T12:00:00').toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'}); }
     function weekdayIndex(dateStr){ return new Date(dateStr+'T12:00:00').getDay(); }
     function shiftDate(dateStr, delta){
-      if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr || '')){
-        const d = new Date((dateStr || '') + 'T12:00:00');
-        if(!isNaN(d.getTime())){ d.setDate(d.getDate()+delta); return isoDate(d); }
+      const d = new Date((dateStr || '') + 'T12:00:00');
+      if(isNaN(d.getTime())){
         const today = new Date();
-        today.setDate(today.getDate()+delta);
+        today.setDate(today.getDate() + delta);
         return isoDate(today);
       }
-      const parts = dateStr.split('-').map(Number);
-      const base = Date.UTC(parts[0], parts[1]-1, parts[2]);
-      const next = new Date(base + delta * 86400000);
-      return isoDate(next);
+      d.setDate(d.getDate() + delta);
+      return isoDate(d);
     }
     function ensureEntry(dateStr){
       if(!state.entries[dateStr]) state.entries[dateStr] = { date: dateStr, meals: Array.from({length:4},()=>({targetBlocks:'', time:'', food:''})), exercise: Array.from({length:3},()=>({activity:'', duration:''})), waterTarget:'88', waterActual:'0', successes:'', improveTomorrow:'' };
