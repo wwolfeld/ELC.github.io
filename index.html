@@ -175,8 +175,15 @@
     function friendlyDate(dateStr){ return new Date(dateStr+'T12:00:00').toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'}); }
     function weekdayIndex(dateStr){ return new Date(dateStr+'T12:00:00').getDay(); }
     function shiftDate(dateStr, delta){
-      const [y,m,d] = dateStr.split('-').map(Number);
-      const base = Date.UTC(y, m-1, d);
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr || '')){
+        const d = new Date((dateStr || '') + 'T12:00:00');
+        if(!isNaN(d.getTime())){ d.setDate(d.getDate()+delta); return isoDate(d); }
+        const today = new Date();
+        today.setDate(today.getDate()+delta);
+        return isoDate(today);
+      }
+      const parts = dateStr.split('-').map(Number);
+      const base = Date.UTC(parts[0], parts[1]-1, parts[2]);
       const next = new Date(base + delta * 86400000);
       return isoDate(next);
     }
@@ -201,9 +208,11 @@
       if(name === 'history') renderHistory();
     }
     function bindTap(el, fn){
-      const handler = (e) => { e.preventDefault(); e.stopPropagation(); fn(); };
-      el.addEventListener('pointerup', handler, { passive: false });
-      el.addEventListener('click', handler, { passive: false });
+      el.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        fn();
+      }, { passive: false });
     }
     bindTap(tabs.program, () => showScreen('program'));
     bindTap(tabs.daily, () => showScreen('daily'));
