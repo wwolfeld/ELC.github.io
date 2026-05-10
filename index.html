@@ -175,14 +175,50 @@
     function friendlyDate(dateStr){ return new Date(dateStr+'T12:00:00').toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'}); }
     function weekdayIndex(dateStr){ return new Date(dateStr+'T12:00:00').getDay(); }
     function shiftDate(dateStr, delta){
-      const d = new Date((dateStr || '') + 'T12:00:00');
-      if(isNaN(d.getTime())){
-        const today = new Date();
-        today.setDate(today.getDate() + delta);
-        return isoDate(today);
+      function isLeap(y){ return (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0); }
+      const monthDays = [31,28,31,30,31,30,31,31,30,31,30,31];
+      function dateToIndex(y,m,d){
+        let days = 0;
+        if (y >= 2025){
+          for(let year=2025; year<y; year++){ days += isLeap(year) ? 366 : 365; }
+        } else {
+          for(let year=2024; year>=y; year--){ days -= isLeap(year) ? 366 : 365; }
+        }
+        const md = monthDays.slice(); if(isLeap(y)) md[1] = 29;
+        for(let i=1;i<m;i++){ days += md[i-1]; }
+        days += (d-1);
+        return days;
       }
-      d.setDate(d.getDate() + delta);
-      return isoDate(d);
+      function indexToDate(idx){
+        let y = 2025;
+        while(idx < 0){ y--; idx += isLeap(y) ? 366 : 365; }
+        while(true){ const yearDays = isLeap(y) ? 366 : 365; if(idx >= yearDays){ idx -= yearDays; y++; } else break; }
+        const md = monthDays.slice(); if(isLeap(y)) md[1] = 29;
+        let m = 1;
+        for(let i=0;i<12;i++){ if(idx < md[i]){ m = i+1; break; } idx -= md[i]; }
+        const d = idx + 1;
+        return {y,m,d};
+      }
+      function fromPartsOrToday(delta){
+        const now = new Date();
+        const yy = now.getFullYear();
+        const mm = now.getMonth()+1;
+        const dd = now.getDate();
+        let idx = dateToIndex(yy,mm,dd) + delta;
+        const res = indexToDate(idx);
+        const mm2 = String(res.m).padStart(2,'0');
+        const dd2 = String(res.d).padStart(2,'0');
+        return `${res.y}-${mm2}-${dd2}`;
+      }
+      if(!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)){
+        return fromPartsOrToday(delta);
+      }
+      const parts = dateStr.split('-').map(Number);
+      let idx = dateToIndex(parts[0], parts[1], parts[2]) + delta;
+      const res = indexToDate(idx);
+      const mm = String(res.m).padStart(2,'0');
+      const dd = String(res.d).padStart(2,'0');
+      return `${res.y}-${mm}-${dd}`;
     }
     function ensureEntry(dateStr){
       if(!state.entries[dateStr]) state.entries[dateStr] = { date: dateStr, meals: Array.from({length:4},()=>({targetBlocks:'', time:'', food:''})), exercise: Array.from({length:3},()=>({activity:'', duration:''})), waterTarget:'88', waterActual:'0', successes:'', improveTomorrow:'' };
