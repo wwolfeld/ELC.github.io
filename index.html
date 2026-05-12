@@ -68,12 +68,30 @@
     <header class="topbar">
       <div class="brand">
         <div class="logo">🗒️</div>
-        <div><h1>Journal Tracker</h1><p>iPhone-friendly web version</p></div>
+        <div><h1>Journal Tracker</h1><p>iPhone-friendly web version</p></div><span id="currentUserLabel" class="tiny" style="margin-left:0.5rem;"></span>
       </div>
       <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle dark mode">◐</button>
     </header>
 
     <main class="content">
+      <div id="authPanel" class="section">
+        <h3>Sign in</h3>
+        <label>Email
+          <input id="authEmail" type="email" autocomplete="email">
+        </label>
+        <label>Password
+          <input id="authPassword" type="password" autocomplete="current-password">
+        </label>
+        <label>Display name (initials)
+          <input id="authDisplayName" type="text" autocomplete="nickname">
+        </label>
+        <div style="margin-top:0.5rem;">
+          <button id="btnRegister" type="button">Register</button>
+          <button id="btnLogin" type="button">Log in</button>
+          <button id="btnLogout" type="button">Log out</button>
+        </div>
+        <p class="tiny" id="authMessage"></p>
+      </div>
       <section class="screen active" id="screen-program">
         <div class="swipe-nav">
           <div><div class="pill">Program pages</div><div class="hint">Use arrows or swipe left/right.</div></div>
@@ -344,6 +362,202 @@
 
     renderProgram();
     renderDaily();
+  
+    const emailInput = document.getElementById('authEmail');
+    const passInput = document.getElementById('authPassword');
+    const nameInput = document.getElementById('authDisplayName');
+    const msg = document.getElementById('authMessage');
+    const authPanel = document.getElementById('authPanel');
+
+    function updateAuthPanelVisibility() {
+      if (state.currentUser) {
+        authPanel.style.display = 'none';
+      } else {
+        authPanel.style.display = 'block';
+      }
+    }
+
+    document.getElementById('btnRegister').addEventListener('click', async () => {
+      msg.textContent = '';
+      try {
+        await window._journalAuth.registerUser(
+          emailInput.value.trim(),
+          passInput.value,
+          nameInput.value.trim() || emailInput.value.trim()
+        );
+        msg.textContent = 'Registered and signed in.';
+        updateAuthPanelVisibility();
+      } catch (e) {
+        msg.textContent = 'Registration error: ' + (e.message || e);
+      }
+    });
+
+    document.getElementById('btnLogin').addEventListener('click', async () => {
+      msg.textContent = '';
+      try {
+        await window._journalAuth.loginUser(
+          emailInput.value.trim(),
+          passInput.value
+        );
+        msg.textContent = 'Signed in.';
+        updateAuthPanelVisibility();
+      } catch (e) {
+        msg.textContent = 'Login error: ' + (e.message || e);
+      }
+    });
+
+    document.getElementById('btnLogout').addEventListener('click', async () => {
+      msg.textContent = '';
+      try {
+        await window._journalAuth.logoutUser();
+        msg.textContent = 'Signed out.';
+        updateAuthPanelVisibility();
+      } catch (e) {
+        msg.textContent = 'Logout error: ' + (e.message || e);
+      }
+    });
+
+    updateAuthPanelVisibility();
+</script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBf3TwtOqp0PYva8kgMx3IaCUPgeSubchY",
+      authDomain: "elc-journal-tracker.firebaseapp.com",
+      projectId: "elc-journal-tracker",
+      storageBucket: "elc-journal-tracker.firebasestorage.app",
+      messagingSenderId: "26464449513",
+      appId: "1:26464449513:web:af3d82e4b47ef946e59178"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const userLabel = document.getElementById('currentUserLabel');
+
+    function updateUserLabel() {
+      if (state.currentUser) {
+        userLabel.textContent = `User: ${state.currentUser.displayName}`;
+      } else {
+        userLabel.textContent = '';
+      }
+    }
+
+    function entryDocId(uid, dateStr) {
+      return uid + "_" + dateStr;
+    }
+
+    async function saveEntryToFirestore(dateStr) {
+      if (!state.currentUser) return;
+      const uid = state.currentUser.uid;
+      const entry = ensureEntry(dateStr);
+      const ref = doc(db, 'entries', entryDocId(uid, dateStr));
+      const payload = {
+        uid,
+        date: dateStr,
+        meals: entry.meals,
+        exercise: entry.exercise,
+        waterTarget: entry.waterTarget,
+        waterActual: entry.waterActual,
+        successes: entry.successes,
+        improveTomorrow: entry.improveTomorrow,
+        updatedAt: new Date().toISOString()
+      };
+      await setDoc(ref, payload, { merge: true });
+    }
+
+    async function loadEntryFromFirestore(uid, dateStr) {
+      const ref = doc(db, 'entries', entryDocId(uid, dateStr));
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const data = snap.data();
+        state.entries[dateStr] = {
+          date: data.date,
+          meals: data.meals || Array.from({length:4},()=>({targetBlocks:'', time:'', food:''})),
+          exercise: data.exercise || Array.from({length:3},()=>({activity:'', duration:''})),
+          waterTarget: data.waterTarget ?? '88',
+          waterActual: data.waterActual ?? '0',
+          successes: data.successes || '',
+          improveTomorrow: data.improveTomorrow || ''
+        };
+      }
+    }
+
+    async function registerUser(email, password, displayName) {
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      const uid = cred.user.uid;
+      await setDoc(doc(db, 'users', uid), {
+        displayName,
+        createdAt: new Date().toISOString()
+      });
+      state.currentUser = { uid, displayName, email };
+      localStorage.setItem('journalUser', JSON.stringify(state.currentUser));
+      updateUserLabel();
+      await loadEntryFromFirestore(uid, state.currentDate);
+      renderDaily();
+    }
+
+    async function loginUser(email, password) {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
+      const uid = cred.user.uid;
+      const userSnap = await getDoc(doc(db, 'users', uid));
+      const displayName = userSnap.exists() ? userSnap.data().displayName : email;
+      state.currentUser = { uid, displayName, email };
+      localStorage.setItem('journalUser', JSON.stringify(state.currentUser));
+      updateUserLabel();
+      await loadEntryFromFirestore(uid, state.currentDate);
+      renderDaily();
+    }
+
+    async function logoutUser() {
+      await signOut(auth);
+      state.currentUser = null;
+      localStorage.removeItem('journalUser');
+      updateUserLabel();
+    }
+
+    const saved = localStorage.getItem('journalUser');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        state.currentUser = parsed;
+        updateUserLabel();
+        onAuthStateChanged(auth, (user) => {
+          if (user && state.currentUser && user.uid === state.currentUser.uid) {
+            loadEntryFromFirestore(user.uid, state.currentDate).then(renderDaily);
+          } else {
+            state.currentUser = null;
+            updateUserLabel();
+          }
+        });
+      } catch {
+        state.currentUser = null;
+      }
+    }
+
+    window._journalAuth = {
+      registerUser,
+      loginUser,
+      logoutUser,
+      saveEntryToFirestore,
+      loadEntryFromFirestore
+    };
   </script>
 </body>
 </html>
