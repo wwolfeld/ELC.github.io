@@ -90,6 +90,7 @@
           <button id="btnLogin" type="button">Log in</button>
           <button id="btnLogout" type="button">Log out</button>
         </div>
+      <div id="appContent">
         <p class="tiny" id="authMessage"></p>
       </div>
       <section class="screen active" id="screen-program">
@@ -176,7 +177,8 @@
         <div class="section"><h2>History</h2><p class="muted">This version stores your entries on this device so they remain available when you reopen the web app in Safari on the same phone. </p></div>
         <div id="historyList"></div>
       </section>
-    </main>
+          </div>
+</main>
 
     <nav class="bottom-nav" aria-label="Main navigation">
       <button class="tab active" id="tabProgram" type="button"><span>Program</span></button>
@@ -370,10 +372,13 @@
     const authPanel = document.getElementById('authPanel');
 
     function updateAuthPanelVisibility() {
+      const appContent = document.getElementById('appContent');
       if (state.currentUser) {
         authPanel.style.display = 'none';
+        if (appContent) appContent.style.display = 'block';
       } else {
         authPanel.style.display = 'block';
+        if (appContent) appContent.style.display = 'none';
       }
     }
 
