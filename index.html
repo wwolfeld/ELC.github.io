@@ -71,8 +71,8 @@
   <div class="app">
     <header class="topbar">
       <div class="brand">
-        <div class="logo">🗒️</div>
-        <div><h1>Journal Tracker</h1><p>v0.09</p></div><span id="currentUserLabel" class="tiny" style="margin-left:0.5rem;"></span>
+        <div class="logo"> </div>
+        <div><h1>Journal Tracker</h1><p>v0.10a</p></div><span id="currentUserLabel" class="tiny" style="margin-left:0.5rem;"></span>
       </div>
       <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle dark mode">◐</button>
     </header>
@@ -192,7 +192,7 @@
     </nav>
   </div>
 
-  <script>
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
     import {
       getAuth,
@@ -549,6 +549,7 @@
       localStorage.setItem('journalUser', JSON.stringify(state.currentUser));
       updateUserLabel();
       await loadEntryFromFirestore(uid, state.currentDate);
+      updateAuthPanelVisibility(); /* I added this; del if incorrect */
       renderDaily();
     }
 
@@ -561,6 +562,7 @@
       localStorage.setItem('journalUser', JSON.stringify(state.currentUser));
       updateUserLabel();
       await loadEntryFromFirestore(uid, state.currentDate);
+      updateAuthPanelVisibility(); /* Perplexity said to add this here */
       renderDaily();
     }
 
@@ -569,6 +571,7 @@
       state.currentUser = null;
       localStorage.removeItem('journalUser');
       updateUserLabel();
+      updateAuthPanelVisibility(); /* I added this; del if incorrect */
     }
 
     const saved = localStorage.getItem('journalUser');
