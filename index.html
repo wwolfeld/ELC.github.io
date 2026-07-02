@@ -362,12 +362,13 @@
       const history = document.getElementById('historyList'); history.innerHTML = '';
       const dates = Object.keys(state.entries).sort().reverse();
       if(!dates.length){ history.innerHTML = '<div class="section"><p class="muted">No daily entries yet.</p></div>'; return; }
-      dates.forEach(date => {
+      for (const date of dates) {
+        if (!state.entries[date]) continue;
         const e = state.entries[date], meals = e.meals.filter(m => m.time || m.food || m.targetBlocks).length, ex = e.exercise.filter(x => x.activity || x.duration).length;
         const item = document.createElement('div'); item.className = 'history-item';
         item.innerHTML = `<strong>${friendlyDate(date)}</strong><div class="tiny">Meals logged: ${meals} · Exercise items: ${ex} · Water: ${e.waterActual || 0}/${e.waterTarget || 0} oz</div>`;
         const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = 'Open this day'; bindTap(btn, () => { state.currentDate = date; showScreen('daily'); }); item.appendChild(btn); history.appendChild(item);
-      });
+      }
     }
 
     function addSwipe(el, onLeft, onRight){
