@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#f7f6f2" />
+  <title>journal-tracker</title>
+  <style>
+    :root, [data-theme="light"] {
+      --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+      --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+      --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+      --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+      --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+      --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
+      --color-bg: #f7f6f2; --color-surface: #f9f8f5; --color-surface-2: #fbfbf9; --color-surface-offset: #edeae5; --color-border: #d4d1ca; --color-divider: #dcd9d5;
+      --color-text: #28251d; --color-text-muted: #6f6b63; --color-primary: #01696f; --color-primary-highlight: #cedcd8;
+      --radius-sm: 0.375rem; --radius-md: 0.75rem; --radius-lg: 1rem; --radius-full: 9999px; --shadow-sm: 0 1px 2px rgba(40,37,29,.06);
+      --header-h: 4rem; --bottom-h: 4.8rem;
+    }
+    [data-theme="dark"] {
+      --color-bg: #171614; --color-surface: #1c1b19; --color-surface-2: #201f1d; --color-surface-offset: #22211f; --color-border: #393836; --color-divider: #2b2a28;
+      --color-text: #e2ded6; --color-text-muted: #b3afa8; --color-primary: #4f98a3; --color-primary-highlight: #313b3b;
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    html{-webkit-text-size-adjust:none;text-size-adjust:none}
+    body{margin:0;min-height:100dvh;background:var(--color-bg);color:var(--color-text);font-family:Georgia,serif;font-size:var(--text-base);line-height:1.5}
+    button,input,textarea,select{font:inherit;color:inherit}
+    button{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+    textarea,input,select{background:var(--color-surface-2);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:.72rem .82rem;width:100%}
+    textarea{min-height:6rem;resize:vertical}
+    .app{max-width:540px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column}
+    .topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);padding:calc(env(safe-area-inset-top) + var(--space-3)) var(--space-4) var(--space-3);background:rgba(247,246,242,.96);border-bottom:1px solid var(--color-divider)}
+    [data-theme="dark"] .topbar{background:rgba(23,22,20,.96)}
+    .brand{display:flex;align-items:center;gap:.8rem}.brand h1{margin:0;font-size:var(--text-lg)}.brand p{margin:0;color:var(--color-text-muted);font-size:var(--text-xs)}
+    .logo{width:1.9rem;height:1.9rem;border-radius:.55rem;background:linear-gradient(180deg,var(--color-primary-highlight),var(--color-surface));display:grid;place-items:center;border:1px solid var(--color-border)}
+    .icon-btn{width:2.5rem;height:2.5rem;border-radius:var(--radius-full);border:1px solid var(--color-border);background:var(--color-surface)}
+    .content{flex:1;padding:var(--space-4) var(--space-4) calc(var(--bottom-h) + env(safe-area-inset-bottom) + var(--space-6))}
+    .screen{display:none}.screen.active{display:block}
+    .section{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-4);box-shadow:var(--shadow-sm);margin-bottom:var(--space-4)}
+    .section h2,.section h3{margin:0 0 var(--space-3)} .section h2{font-size:var(--text-xl)} .section h3{font-size:var(--text-lg)}
+    .tiny{font-size:var(--text-xs);color:var(--color-text-muted)} .muted{color:var(--color-text-muted)}
+    .grid{display:grid;gap:var(--space-3)} .grid.two{grid-template-columns:1fr 1fr}
+    .field label{display:block;font-size:var(--text-xs);color:var(--color-text-muted);margin:0 0 .35rem;font-weight:700}
+    .meal-card,.exercise-row{border:1px solid var(--color-divider);border-radius:var(--radius-md);padding:var(--space-3);background:var(--color-surface-2)}
+    .meal-card + .meal-card,.exercise-row + .exercise-row,.line-field + .line-field{margin-top:var(--space-3)}
+    .meal-grid{display:grid;grid-template-columns:7.2rem 1fr;gap:var(--space-3);align-items:start}.meal-left{display:grid;gap:var(--space-3)}
+    .line-field{display:grid;grid-template-columns:1.9rem 1fr;gap:var(--space-2);align-items:start}.line-field .idx{padding-top:.7rem;font-weight:700;color:var(--color-text-muted)}.line-field.single{grid-template-columns:1fr}
+    .swipe-nav{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);margin-bottom:var(--space-4)}
+    .pill{display:inline-flex;align-items:center;padding:.42rem .8rem;border-radius:var(--radius-full);background:var(--color-primary-highlight);color:var(--color-primary);font-size:var(--text-xs);font-weight:700}
+    .nav-arrows{display:flex;gap:var(--space-2)} .nav-arrows button{padding:.65rem .95rem;border-radius:var(--radius-full);border:1px solid var(--color-border);background:var(--color-surface);min-width:44px;min-height:44px}
+    .days{display:flex;gap:.35rem;flex-wrap:wrap}.day-chip{border:1px solid var(--color-border);padding:.35rem .55rem;border-radius:var(--radius-full);background:var(--color-surface-2);font-size:var(--text-xs);font-weight:700}.day-chip.active{background:var(--color-primary);border-color:var(--color-primary);color:#fff}
+    .water-wrap{display:grid;grid-template-columns:5.5rem 1fr;gap:var(--space-3);align-items:end}.water-controls{display:grid;gap:var(--space-3)}
+    .quick-add{display:flex;gap:var(--space-2);flex-wrap:wrap}.quick-add button{padding:.6rem .85rem;border-radius:var(--radius-full);border:1px solid var(--color-border);background:var(--color-surface-2);min-width:44px;min-height:44px}
+    .progress{height:.8rem;background:var(--color-surface-offset);border-radius:var(--radius-full);overflow:hidden;border:1px solid var(--color-border)} .progress>span{display:block;height:100%;background:linear-gradient(90deg,var(--color-primary),#7ec0c5);width:0%}
+    .bottom-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(540px,100%);display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;padding:.7rem var(--space-4) calc(.7rem + env(safe-area-inset-bottom));background:rgba(247,246,242,.98);border-top:1px solid var(--color-divider);z-index:30}
+    [data-theme="dark"] .bottom-nav{background:rgba(23,22,20,.98)}
+    .tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;padding:.55rem .4rem;border:1px solid transparent;background:transparent;border-radius:var(--radius-md);color:var(--color-text-muted);min-height:52px}
+    .tab.active{background:var(--color-surface);color:var(--color-text);border-color:var(--color-border)} .tab span{font-size:var(--text-xs);font-weight:700}
+    .date-title{font-size:var(--text-lg);font-weight:700} .hint{margin-top:var(--space-2);font-size:var(--text-xs);color:var(--color-text-muted)}
+    .history-item{padding:var(--space-3);border:1px solid var(--color-divider);border-radius:var(--radius-md);background:var(--color-surface-2);margin-bottom:var(--space-3)}
+    .history-item button{margin-top:var(--space-2);padding:.5rem .85rem;border-radius:var(--radius-full);border:1px solid var(--color-border);background:var(--color-surface);min-height:44px}
+    @media (max-width:430px){.grid.two,.water-wrap,.meal-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">🗒️</div>
+        <div><h1>Journal Tracker</h1><p>iPhone-friendly web version</p></div>
+      </div>
+      <button class="icon-btn" id="themeToggle" type="button" aria-label="Toggle dark mode">◐</button>
+    </header>
+
+    <main class="content">
+      <section class="screen active" id="screen-program">
+        <div class="swipe-nav">
+          <div><div class="pill">Program pages</div><div class="hint">Use arrows or swipe left/right.</div></div>
+          <div class="nav-arrows"><button id="programPrev" type="button">←</button><button id="programNext" type="button">→</button></div>
+        </div>
+
+        <div class="section program-page" data-program-index="0">
+          <h2>Game Plan for Success</h2>
+          <div class="grid two">
+            <div class="field"><label for="foodBlocks">Food blocks per day</label><input id="foodBlocks" type="number" min="0" step="1" placeholder="14"></div>
+            <div class="field"><label for="waterTargetProgram">Water ounces per day</label><input id="waterTargetProgram" type="number" min="0" step="1" placeholder="88"></div>
+          </div>
+          <div class="grid two" style="margin-top:1rem;">
+            <div class="field"><label for="cardioSessions">Cardio sessions per week (30+ min)</label><input id="cardioSessions" type="number" min="0" step="1"></div>
+            <div class="field"><label for="strengthSessions">Strength sessions per week (30+ min)</label><input id="strengthSessions" type="number" min="0" step="1"></div>
+          </div>
+          <div class="field" style="margin-top:1rem;"><label for="exercisePlan">What activities will I do to reach my weekly exercise recommendation?</label><textarea id="exercisePlan"></textarea></div>
+        </div>
+
+        <div class="section program-page" data-program-index="1" hidden>
+          <h2>Habits and Goals</h2>
+          <h3>Habits I'm committing to focus on</h3>
+          <div class="line-field"><div class="idx">1.</div><input type="text" placeholder="Habit 1"></div>
+          <div class="line-field"><div class="idx">2.</div><input type="text" placeholder="Habit 2"></div>
+          <div class="line-field"><div class="idx">3.</div><input type="text" placeholder="Habit 3"></div>
+          <h3 style="margin-top:1.2rem;">My goals for the program</h3>
+          <div class="line-field"><div class="idx">1.</div><input type="text" placeholder="Goal 1"></div>
+          <div class="line-field"><div class="idx">2.</div><input type="text" placeholder="Goal 2"></div>
+        </div>
+
+        <div class="section program-page" data-program-index="2" hidden>
+          <h2>Why, Values, Encouragement</h2>
+          <h3>Why my results are important to me</h3>
+          <div class="line-field"><div class="idx">1.</div><input type="text" placeholder="Reason 1"></div>
+          <div class="line-field"><div class="idx">2.</div><input type="text" placeholder="Reason 2"></div>
+          <div class="line-field"><div class="idx">3.</div><input type="text" placeholder="Reason 3"></div>
+          <h3 style="margin-top:1.2rem;">I value</h3>
+          <div class="line-field"><div class="idx">1.</div><input type="text" placeholder="Value 1"></div>
+          <div class="line-field"><div class="idx">2.</div><input type="text" placeholder="Value 2"></div>
+          <div class="line-field"><div class="idx">3.</div><input type="text" placeholder="Value 3"></div>
+          <h3 style="margin-top:1.2rem;">When I need encouragement, I will tell myself</h3>
+          <div class="line-field single"><input type="text" placeholder="Single encouragement statement"></div>
+        </div>
+      </section>
+
+      <section class="screen" id="screen-daily">
+        <div class="swipe-nav">
+          <div><div class="pill">Daily journal</div><div class="hint">Use arrows or swipe left/right to change the date.</div></div>
+          <div class="nav-arrows"><button id="dayPrev" type="button">←</button><button id="dayNext" type="button">→</button></div>
+        </div>
+
+        <div class="section">
+          <div class="date-title" id="dateTitle"></div>
+          <div class="tiny">One long page combining both printed journal pages.</div>
+          <div class="grid two" style="margin-top:1rem;">
+            <div class="field"><label for="entryDate">Date</label><input id="entryDate" type="date"></div>
+            <div class="field"><label>Day</label><div class="days" id="dayChips"></div></div>
+          </div>
+        </div>
+
+        <div class="section"><h3>Meals</h3><div id="meals"></div></div>
+        <div class="section"><h3>Exercise</h3><div id="exerciseRows"></div><div class="hint">Add activities and durations for the day.</div></div>
+
+        <div class="section">
+          <h3>Water</h3>
+          <div class="water-wrap">
+            <div class="field"><label for="waterTarget">Target oz</label><input id="waterTarget" type="number" min="0" step="1"></div>
+            <div class="water-controls">
+              <div class="field"><label for="waterActual">Actual oz</label><input id="waterActual" type="number" min="0" step="1"></div>
+              <div class="quick-add"><button type="button" data-add-water="4">+4</button><button type="button" data-add-water="8">+8</button><button type="button" data-add-water="12">+12</button><button type="button" data-add-water="16">+16</button></div>
+              <div class="progress"><span id="waterBar"></span></div>
+              <div class="tiny" id="waterSummary">0 of 0 ounces</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section"><h3>Today's Successes</h3><textarea id="successes"></textarea></div>
+        <div class="section"><h3>What I'd like to improve on tomorrow</h3><textarea id="improveTomorrow"></textarea></div>
+      </section>
+
+      <section class="screen" id="screen-history">
+        <div class="section"><h2>History</h2><p class="muted">This version stores your entries on this device so they remain available when you reopen the web app in Safari on the same phone. </p></div>
+        <div id="historyList"></div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <button class="tab active" id="tabProgram" type="button"><span>Program</span></button>
+      <button class="tab" id="tabDaily" type="button"><span>Today</span></button>
+      <button class="tab" id="tabHistory" type="button"><span>History</span></button>
+    </nav>
+  </div>
+
+  <script>
+    const state = { programPage: 0, currentDate: isoDate(new Date()), entries: {}, theme: 'light' };
+    const storageKey = 'journalTracker.v2';
+
+    function isoDate(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+    function friendlyDate(dateStr){ return new Date(dateStr+'T12:00:00').toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'}); }
+    function weekdayIndex(dateStr){ return new Date(dateStr+'T12:00:00').getDay(); }
+    function shiftDate(dateStr, delta){
+      function isLeap(y){ return (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0); }
+      const monthDays = [31,28,31,30,31,30,31,31,30,31,30,31];
+      function dateToIndex(y,m,d){
+        let days = 0;
+        if (y >= 2025){
+          for(let year=2025; year<y; year++){ days += isLeap(year) ? 366 : 365; }
+        } else {
+          for(let year=2024; year>=y; year--){ days -= isLeap(year) ? 366 : 365; }
+        }
+        const md = monthDays.slice(); if(isLeap(y)) md[1] = 29;
+        for(let i=1;i<m;i++){ days += md[i-1]; }
+        days += (d-1);
+        return days;
+      }
+      function indexToDate(idx){
+        let y = 2025;
+        while(idx < 0){ y--; idx += isLeap(y) ? 366 : 365; }
+        while(true){ const yearDays = isLeap(y) ? 366 : 365; if(idx >= yearDays){ idx -= yearDays; y++; } else break; }
+        const md = monthDays.slice(); if(isLeap(y)) md[1] = 29;
+        let m = 1;
+        for(let i=0;i<12;i++){ if(idx < md[i]){ m = i+1; break; } idx -= md[i]; }
+        const d = idx + 1;
+        return {y,m,d};
+      }
+      function fromPartsOrToday(delta){
+        const now = new Date();
+        const yy = now.getFullYear();
+        const mm = now.getMonth()+1;
+        const dd = now.getDate();
+        let idx = dateToIndex(yy,mm,dd) + delta;
+        const res = indexToDate(idx);
+        const mm2 = String(res.m).padStart(2,'0');
+        const dd2 = String(res.d).padStart(2,'0');
+        return `${res.y}-${mm2}-${dd2}`;
+      }
+      if(!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)){
+        return fromPartsOrToday(delta);
+      }
+      const parts = dateStr.split('-').map(Number);
+      let idx = dateToIndex(parts[0], parts[1], parts[2]) + delta;
+      const res = indexToDate(idx);
+      const mm = String(res.m).padStart(2,'0');
+      const dd = String(res.d).padStart(2,'0');
+      return `${res.y}-${mm}-${dd}`;
+    }
+    function ensureEntry(dateStr){
+      if(!state.entries[dateStr]) state.entries[dateStr] = { date: dateStr, meals: Array.from({length:4},()=>({targetBlocks:'', time:'', food:''})), exercise: Array.from({length:3},()=>({activity:'', duration:''})), waterTarget:'88', waterActual:'0', successes:'', improveTomorrow:'' };
+      return state.entries[dateStr];
+    }
+    function save(){ try { localStorage.setItem(storageKey, JSON.stringify({ entries: state.entries, theme: state.theme })); } catch(e) {} }
+    function load(){
+      try {
+        const raw = localStorage.getItem(storageKey);
+        if(raw){ const parsed = JSON.parse(raw); state.entries = parsed.entries || {}; state.theme = parsed.theme || state.theme; }
+      } catch(e) {}
+    }
+
+    const screens = { program: document.getElementById('screen-program'), daily: document.getElementById('screen-daily'), history: document.getElementById('screen-history') };
+    const tabs = { program: document.getElementById('tabProgram'), daily: document.getElementById('tabDaily'), history: document.getElementById('tabHistory') };
+    function showScreen(name){
+      Object.entries(screens).forEach(([key, el]) => el.classList.toggle('active', key === name));
+      Object.entries(tabs).forEach(([key, el]) => el.classList.toggle('active', key === name));
+      if(name === 'daily') renderDaily();
+      if(name === 'history') renderHistory();
+    }
+    function bindTap(el, fn){
+      el.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        fn();
+      }, { passive: false });
+    }
+    bindTap(tabs.program, () => showScreen('program'));
+    bindTap(tabs.daily, () => showScreen('daily'));
+    bindTap(tabs.history, () => showScreen('history'));
+
+    const themeToggle = document.getElementById('themeToggle');
+    load();
+    if(!state.theme){ state.theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'; }
+    document.documentElement.setAttribute('data-theme', state.theme);
+    bindTap(themeToggle, () => { state.theme = state.theme === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', state.theme); save(); });
+
+    const programPages = [...document.querySelectorAll('.program-page')];
+    function renderProgram(){ programPages.forEach((page, i) => page.hidden = i !== state.programPage); }
+    bindTap(document.getElementById('programPrev'), () => { state.programPage = (state.programPage + programPages.length - 1) % programPages.length; renderProgram(); });
+    bindTap(document.getElementById('programNext'), () => { state.programPage = (state.programPage + 1) % programPages.length; renderProgram(); });
+
+    const dateTitle = document.getElementById('dateTitle');
+    const entryDate = document.getElementById('entryDate');
+    const dayChips = document.getElementById('dayChips');
+    const mealsWrap = document.getElementById('meals');
+    const exerciseWrap = document.getElementById('exerciseRows');
+    const waterTarget = document.getElementById('waterTarget');
+    const waterActual = document.getElementById('waterActual');
+    const waterBar = document.getElementById('waterBar');
+    const waterSummary = document.getElementById('waterSummary');
+    const successes = document.getElementById('successes');
+    const improveTomorrow = document.getElementById('improveTomorrow');
+    const dayNames = ['Su','M','Tu','W','Th','F','Sa'];
+
+    function renderDaily(){
+      const entry = ensureEntry(state.currentDate);
+      dateTitle.textContent = friendlyDate(state.currentDate);
+      entryDate.value = state.currentDate;
+      dayChips.innerHTML = '';
+      const active = weekdayIndex(state.currentDate);
+      dayNames.forEach((name, i) => { const chip = document.createElement('div'); chip.className = 'day-chip' + (i === active ? ' active' : ''); chip.textContent = name; dayChips.appendChild(chip); });
+      mealsWrap.innerHTML = '';
+      entry.meals.forEach((meal, i) => {
+        const card = document.createElement('div');
+        card.className = 'meal-card';
+        card.innerHTML = `<div class="tiny" style="margin-bottom:.5rem;font-weight:700;">Meal ${i+1}</div><div class="meal-grid"><div class="meal-left"><div class="field"><label>Target Blocks</label><input type="number" min="0" step="1" data-meal-target="${i}" value="${meal.targetBlocks}"></div><div class="field"><label>Time</label><input type="time" data-meal-time="${i}" value="${meal.time}"></div></div><div class="field"><label>What I ate</label><textarea data-meal-food="${i}">${meal.food}</textarea></div></div>`;
+        mealsWrap.appendChild(card);
+      });
+      exerciseWrap.innerHTML = '';
+      entry.exercise.forEach((row, i) => {
+        const el = document.createElement('div');
+        el.className = 'exercise-row';
+        el.innerHTML = `<div class="grid two"><div class="field"><label>Activity</label><input type="text" data-ex-activity="${i}" value="${row.activity}"></div><div class="field"><label>Duration</label><input type="text" data-ex-duration="${i}" value="${row.duration}"></div></div>`;
+        exerciseWrap.appendChild(el);
+      });
+      waterTarget.value = entry.waterTarget; waterActual.value = entry.waterActual; successes.value = entry.successes; improveTomorrow.value = entry.improveTomorrow; renderWater(); attachDailyListeners(); save();
+    }
+
+    function attachDailyListeners(){
+      entryDate.onchange = () => { state.currentDate = entryDate.value; renderDaily(); };
+      document.querySelectorAll('[data-meal-target]').forEach(el => el.oninput = () => { ensureEntry(state.currentDate).meals[el.dataset.mealTarget].targetBlocks = el.value; save(); });
+      document.querySelectorAll('[data-meal-time]').forEach(el => el.oninput = () => { ensureEntry(state.currentDate).meals[el.dataset.mealTime].time = el.value; save(); });
+      document.querySelectorAll('[data-meal-food]').forEach(el => el.oninput = () => { ensureEntry(state.currentDate).meals[el.dataset.mealFood].food = el.value; save(); });
+      document.querySelectorAll('[data-ex-activity]').forEach(el => el.oninput = () => { ensureEntry(state.currentDate).exercise[el.dataset.exActivity].activity = el.value; save(); });
+      document.querySelectorAll('[data-ex-duration]').forEach(el => el.oninput = () => { ensureEntry(state.currentDate).exercise[el.dataset.exDuration].duration = el.value; save(); });
+      waterTarget.oninput = () => { ensureEntry(state.currentDate).waterTarget = waterTarget.value; renderWater(); save(); };
+      waterActual.oninput = () => { ensureEntry(state.currentDate).waterActual = waterActual.value; renderWater(); save(); };
+      successes.oninput = () => { ensureEntry(state.currentDate).successes = successes.value; save(); };
+      improveTomorrow.oninput = () => { ensureEntry(state.currentDate).improveTomorrow = improveTomorrow.value; save(); };
+    }
+
+    function renderWater(){ const e = ensureEntry(state.currentDate), target = Number(e.waterTarget || 0), actual = Number(e.waterActual || 0), pct = target > 0 ? Math.min(100, (actual / target) * 100) : 0; waterBar.style.width = pct + '%'; waterSummary.textContent = `${actual} of ${target} ounces`; }
+    document.querySelectorAll('[data-add-water]').forEach(btn => bindTap(btn, () => { const e = ensureEntry(state.currentDate); e.waterActual = String(Number(e.waterActual || 0) + Number(btn.dataset.addWater)); waterActual.value = e.waterActual; renderWater(); save(); }));
+    bindTap(document.getElementById('dayPrev'), () => { state.currentDate = shiftDate(state.currentDate, -1); renderDaily(); });
+    bindTap(document.getElementById('dayNext'), () => { state.currentDate = shiftDate(state.currentDate, 1); renderDaily(); });
+
+    function renderHistory(){
+      const history = document.getElementById('historyList'); history.innerHTML = '';
+      const dates = Object.keys(state.entries).sort().reverse();
+      if(!dates.length){ history.innerHTML = '<div class="section"><p class="muted">No daily entries yet.</p></div>'; return; }
+      dates.forEach(date => {
+        const e = state.entries[date], meals = e.meals.filter(m => m.time || m.food || m.targetBlocks).length, ex = e.exercise.filter(x => x.activity || x.duration).length;
+        const item = document.createElement('div'); item.className = 'history-item';
+        item.innerHTML = `<strong>${friendlyDate(date)}</strong><div class="tiny">Meals logged: ${meals} · Exercise items: ${ex} · Water: ${e.waterActual || 0}/${e.waterTarget || 0} oz</div>`;
+        const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = 'Open this day'; bindTap(btn, () => { state.currentDate = date; showScreen('daily'); }); item.appendChild(btn); history.appendChild(item);
+      });
+    }
+
+    function addSwipe(el, onLeft, onRight){
+      let startX = null, startY = null;
+      el.addEventListener('touchstart', e => { if(e.touches.length !== 1) return; startX = e.touches[0].clientX; startY = e.touches[0].clientY; }, { passive: true });
+      el.addEventListener('touchend', e => {
+        if(startX === null || e.changedTouches.length !== 1) return;
+        const dx = e.changedTouches[0].clientX - startX; const dy = e.changedTouches[0].clientY - startY;
+        if(Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5){ dx < 0 ? onLeft() : onRight(); }
+        startX = null; startY = null;
+      }, { passive: true });
+    }
+    addSwipe(document.getElementById('screen-program'), () => { state.programPage = (state.programPage + 1) % programPages.length; renderProgram(); }, () => { state.programPage = (state.programPage + programPages.length - 1) % programPages.length; renderProgram(); });
+    addSwipe(document.getElementById('screen-daily'), () => { state.currentDate = shiftDate(state.currentDate, 1); renderDaily(); }, () => { state.currentDate = shiftDate(state.currentDate, -1); renderDaily(); });
+
+    renderProgram();
+    renderDaily();
+  </script>
+</body>
+</html>
