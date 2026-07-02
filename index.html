@@ -262,6 +262,7 @@
     }
     function ensureEntry(dateStr){
       if(!state.entries[dateStr]) state.entries[dateStr] = { date: dateStr, meals: Array.from({length:4},()=>({targetBlocks:'', time:'', food:''})), exercise: Array.from({length:3},()=>({activity:'', duration:''})), waterTarget:'88', waterActual:'0', successes:'', improveTomorrow:'' };
+      saveEntryToFirestore(dateStr);
       return state.entries[dateStr];
     }
     function save(){ try { localStorage.setItem(storageKey, JSON.stringify({ entries: state.entries, theme: state.theme })); } catch(e) {} }
@@ -488,7 +489,8 @@
     async function saveEntryToFirestore(dateStr) {
       if (!state.currentUser) return;
       const uid = state.currentUser.uid;
-      const entry = ensureEntry(dateStr);
+      // const entry = ensureEntry(dateStr);
+      const entry = state.entries[dateStr];
       const ref = doc(db, 'entries', uid, 'days', dateStr);
       const payload = {
         uid,
