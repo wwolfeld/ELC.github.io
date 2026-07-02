@@ -489,7 +489,7 @@
       if (!state.currentUser) return;
       const uid = state.currentUser.uid;
       const entry = ensureEntry(dateStr);
-      const ref = doc(db, 'entries', uid, dateStr);
+      const ref = doc(db, 'entries', uid, 'days', dateStr);
       const payload = {
         uid,
         date: dateStr,
@@ -505,7 +505,7 @@
     }
 
     async function loadEntryFromFirestore(uid, dateStr) {
-      const ref = doc(db, 'entries', uid, dateStr);
+      const ref = doc(db, 'entries', uid, 'days', dateStr);
       const snap = await getDoc(ref);
       if (snap.exists()) {
         const data = snap.data();
